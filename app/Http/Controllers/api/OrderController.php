@@ -20,33 +20,52 @@ class OrderController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    //public function store(Request $request)
-    //{
-        //$data = $request->validate([
-            //'products' => 'array|required|',
-          //  'products.*' => 'integer',
-        //]);
-        //$order = Order::create();
-        //$productsId = $data['products'];
-        //$order->products()->attach($productsId);
-        //$order->users()->attach(auth()->user()->id);
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'products' => 'array|required|',
+            'products.*' => 'integer',
+        ]);
 
+        $order = Order::create([
+            'user_id' => auth()->user()->id
+        ]);
+        $productsId = $data['products'];
+        $order->products()->attach($productsId);
 
-      //  return new OrderResource(Order::find($order->id));
-    //}
+        return new OrderResource(Order::find($order->id));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $data = $request->validate([
+            'products' => 'array|required|',
+            'products.*' => 'integer',
+        ]);
+
+        $order = Order::findOrFail($id);
+
+        // Очищаем связи с продуктами
+        $order->products()->detach();
+
+        $productsId = $data['products'];
+        $order->products()->attach($productsId);
+
+        return new OrderResource($order);
+    }
+
 
     /**
      * Display the specified resource.
      */
     public function show(Order $order)
     {
-        if(auth()->user()->id != $order->user_id) {
+        if (auth()->user()->id != $order->user_id) {
             return response(['message' => 'not exist'], 404);
         } else {
 
             return new OrderResource(Order::find($order->id));
         }
-
     }
 
     /**
@@ -68,12 +87,11 @@ class OrderController extends Controller
 
     public function destroy(Order $order)
     {
-        if($order->status === 0) {
+        if ($order->status === 0) {
             $order->delete();
             return response(['message' => 'Success'], 200);
         } else {
             return response(['message' => 'Access denied'], 403);
-        }        
+        }
     }
-
 }

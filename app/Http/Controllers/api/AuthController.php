@@ -11,18 +11,19 @@ use Illuminate\Support\Facades\Hash;
 class AuthController extends Controller
 {
     public function register(Request $request) {
-        $user_fields = $request->validate([
-            'name' => 'required|string|max:255',
+        $data = $request->validate([
+            'first_name' => 'string|required',
+            'last_name' => 'string|required',
             'email' => 'required|string|unique:users,email',
             'password' => 'required|string|confirmed',
         ]);
-        $user_fields['password'] = Hash::make($user_fields['password']);
+        $data['password'] = Hash::make($data['password']);
 
-        $user = User::create($user_fields);
+        $user = User::create($data);
 
         $token = $user->createToken('myapptoken')->plainTextToken;
 
-        return response(['user' => $user, 'token' => $token], 201);
+        return response(['user' => new UserResource($user), 'token' => $token], 201);
     }
 
     public function login(Request $request) {

@@ -9,20 +9,43 @@ use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
-    /**
-     * Store a newly created resource in storage.
-     */
+    public function index()
+    {
+        $categories = Category::all();
+        return CategoryResource::collection($categories);
+    }
+
     public function store(Request $request)
     {
         $data = $request->validate([
-            'title' => 'string|required|max:255',
+            'title' => 'required|string|max:255',
         ]);
+
         $category = Category::create($data);
-        return response(['category' => new CategoryResource($category), 'message' => 'success'], 201);
+
+        return new CategoryResource($category);
     }
 
-    /**
-     * Display the specified resource.
-     */
+    public function show(Category $category)
+    {
+        return new CategoryResource($category);
+    }
 
+    public function update(Request $request, Category $category)
+    {
+        $data = $request->validate([
+            'title' => 'required|string|max:255',
+        ]);
+
+        $category->update($data);
+
+        return new CategoryResource($category);
+    }
+
+    public function destroy(Category $category)
+    {
+        $category->delete();
+
+        return response()->json(null, 204);
+    }
 }

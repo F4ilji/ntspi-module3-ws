@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\PostResource;
 use App\Models\Post;
 use Illuminate\Http\Request;
 
@@ -11,45 +12,44 @@ class PostController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index()
     {
-        $request->validate([
-            'orderby' => 'string',
-        ]);
-        ($request->orderby == 'desc') ? $param = 'desc' : $param = 'asc';
-            return Post::orderBy('id', $param)->get();
-        
+        $posts = Post::all();
+        return PostResource::collection($posts);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $data = $request->validate([
+            'title' => 'required|string|max:255',
+            'text' => 'required|string',
+            'image' => 'nullable|string',
+        ]);
+
+        $post = Post::create($data);
+        return new PostResource($post);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show(Post $post)
     {
-        //
+        return new PostResource($post);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Post $post)
     {
-        //
+        $data = $request->validate([
+            'title' => 'required|string|max:255',
+            'text' => 'required|string',
+            'image' => 'nullable|string',
+        ]);
+
+        $post->update($data);
+        return new PostResource($post);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy(Post $post)
     {
-        //
+        $post->delete();
+        return response()->noContent();
     }
 }
